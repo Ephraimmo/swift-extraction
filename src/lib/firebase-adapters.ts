@@ -152,9 +152,15 @@ export function mapDish(raw: FirebaseRecord & { id: string }, restaurantSlug: st
     prepMinutes: num(
       raw,
       ["prepMinutes", "prep_time_minutes", "preparationTime", "prepTime", "cookTime"],
+<<<<<<< HEAD
       15,
     ),
     calories: num(raw, ["calories", "kcal", "energy"], 650),
+=======
+      0,
+    ),
+    calories: num(raw, ["calories", "kcal", "energy"], 0),
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     allergens: strList(raw, ["allergens", "allergies"]),
     ingredients: strList(raw, ["ingredients", "components"]),
     sizes: mapOptions(pick(raw, ["sizes", "variants", "options", "sizeOptions"])),
@@ -336,10 +342,17 @@ export function mapRestaurant(
   const etaMin = num(
     raw,
     ["etaMin", "minDeliveryTime", "deliveryTimeMin", "prepTime", "prep_time_minutes"],
+<<<<<<< HEAD
     15,
   );
   const etaMaxRaw = num(raw, ["etaMax", "maxDeliveryTime", "deliveryTimeMax", "deliveryTime"], 35);
   const priceBandRaw = str(raw, ["priceBand", "priceRange", "priceLevel"], "RR");
+=======
+    0,
+  );
+  const etaMaxRaw = num(raw, ["etaMax", "maxDeliveryTime", "deliveryTimeMax", "deliveryTime"], 0);
+  const priceBandRaw = str(raw, ["priceBand", "priceRange", "priceLevel"], "££");
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   const categoriesFromDishes = shared.categories.length
     ? shared.categories
     : Array.from(new Set(dishes.map((d) => d.category)));
@@ -377,6 +390,7 @@ export function mapRestaurant(
     id,
     slug,
     name,
+<<<<<<< HEAD
     tagline: str(
       raw,
       ["tagline", "description", "about", "summary", "bio", "cuisine"],
@@ -409,12 +423,41 @@ export function mapRestaurant(
         "logoUrl",
       ]) ||
       "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=70",
+=======
+    tagline: str(raw, ["tagline", "description", "about", "summary", "bio"]),
+    cuisines: strList(raw, ["cuisines", "cuisine", "tags", "categoriesLabels"]),
+    priceBand: (["£", "££", "£££"].includes(priceBandRaw)
+      ? priceBandRaw
+      : "££") as Restaurant["priceBand"],
+    rating: num(raw, ["rating", "averageRating", "stars", "score"], 0),
+    reviewCount: num(
+      raw,
+      ["reviewCount", "rating_count", "reviews", "totalReviews", "ratingCount"],
+      0,
+    ),
+    etaMinutes: [etaMin || Math.max(0, etaMaxRaw - 10), etaMaxRaw || etaMin + 15],
+    deliveryFee: num(raw, ["deliveryFee", "delivery_fee", "deliveryCharge", "shippingFee"], 0),
+    minOrder: num(raw, ["minOrder", "minimumOrder", "min_order", "minOrderValue"], 0),
+    distanceKm: num(raw, ["distanceKm", "distance", "distance_km", "delivery_radius_km"], 0),
+    image: str(raw, [
+      "coverImage",
+      "cover",
+      "image",
+      "imageUrl",
+      "image_url",
+      "banner",
+      "photo",
+      "logo",
+      "logoUrl",
+    ]),
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     ...(str(raw, ["badge", "label", "promoLabel"])
       ? { badge: str(raw, ["badge", "label", "promoLabel"]) }
       : {}),
     openNow: bool(raw, ["openNow", "isOpen", "open"], true),
     hours:
       str(raw, ["hours", "openingHours", "opening_hours", "workingHours"]) ||
+<<<<<<< HEAD
       (opens && closes ? `${opens}–${closes}` : "10:00–22:30"),
     address: str(
       raw,
@@ -422,6 +465,11 @@ export function mapRestaurant(
       "Johannesburg, South Africa",
     ),
     phone: str(raw, ["phone", "phoneNumber", "contact", "mobile"], "+27 11 555 0100"),
+=======
+      (opens && closes ? `${opens}–${closes}` : ""),
+    address: str(raw, ["address", "location", "streetAddress", "fullAddress"]),
+    phone: str(raw, ["phone", "phoneNumber", "contact", "mobile"]),
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     categories: (explicitCategories.length ? explicitCategories : categoriesFromDishes).filter(
       Boolean,
     ),
@@ -682,6 +730,7 @@ export function useLoyaltyLedger(customerId: string | null | undefined) {
 
 export function usePromotions() {
   const root = useFirebaseRoot();
+<<<<<<< HEAD
   const campaigns = usePromoCampaigns();
 
   const promotions = useMemo<Promotion[]>(() => {
@@ -711,6 +760,24 @@ export function usePromotions() {
     return list;
   }, [campaigns, root.data]);
 
+=======
+  const promotions = useMemo<Promotion[]>(
+    () =>
+      toList(findNode(root.data, PROMO_NODES)).map((raw) => ({
+        id: raw.id,
+        title: str(raw, ["title", "name", "headline"], "Offer"),
+        detail: str(raw, ["detail", "description", "terms", "subtitle"]),
+        code: str(raw, ["code", "couponCode", "promoCode"]),
+        type: couponType(raw),
+        value: num(
+          raw,
+          ["value", "amount", "discount", "percent", "percentage", "discountValue"],
+          0,
+        ),
+      })),
+    [root.data],
+  );
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   return { ...root, promotions };
 }
 

@@ -176,6 +176,7 @@ function CartPage() {
           </Link>
         </main>
       ) : (
+<<<<<<< HEAD
         <main className="space-y-6 px-4 pt-6 pb-44 md:pb-24">
           {/* 1. How would you like it? (Delivery vs Pickup) */}
           <section className="space-y-2">
@@ -231,6 +232,69 @@ function CartPage() {
                       <p className="text-xs text-muted-foreground">
                         {activeLocation.street}, {activeLocation.city}
                       </p>
+=======
+        <main className="space-y-8 px-4 pt-6 pb-44 md:pb-24">
+          <ul className="space-y-3">
+            {lines.map((line) => (
+              <li
+                key={line.lineId}
+                className="flex gap-3 rounded-3xl bg-card p-3 ring-1 ring-border"
+              >
+                <img
+                  src={line.image}
+                  alt={line.name}
+                  width={1024}
+                  height={640}
+                  loading="lazy"
+                  className="size-20 shrink-0 rounded-2xl object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-tight font-bold">{line.name}</p>
+                  <p className="label-mono mt-1 text-muted-foreground">
+                    {line.sizeLabel}
+                    {line.extras.length ? ` • ${line.extras.join(", ")}` : ""}
+                  </p>
+                  {line.removed.length ? (
+                    <p className="label-mono mt-1 text-destructive">No {line.removed.join(", ")}</p>
+                  ) : null}
+                  {line.notes ? (
+                    <p className="mt-1 text-xs text-muted-foreground italic">“{line.notes}”</p>
+                  ) : null}
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-1 rounded-xl bg-secondary px-1 ring-1 ring-border">
+                      <button
+                        type="button"
+                        onClick={() => setQty(line.lineId, line.qty - 1)}
+                        aria-label={`Decrease ${line.name}`}
+                        className="grid size-9 place-items-center rounded-lg"
+                      >
+                        <Minus className="size-3.5" aria-hidden />
+                      </button>
+                      <span className="w-5 text-center font-mono text-sm font-bold">
+                        {line.qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQty(line.lineId, line.qty + 1)}
+                        aria-label={`Increase ${line.name}`}
+                        className="grid size-9 place-items-center rounded-lg"
+                      >
+                        <Plus className="size-3.5" aria-hidden />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-sm font-bold">
+                        {money(line.unitPrice * line.qty)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeLine(line.lineId)}
+                        aria-label={`Remove ${line.name}`}
+                        className="grid size-9 place-items-center rounded-lg text-muted-foreground"
+                      >
+                        <Trash2 className="size-4" aria-hidden />
+                      </button>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
                     </div>
                   </div>
                 ) : (
