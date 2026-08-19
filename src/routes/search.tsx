@@ -259,6 +259,7 @@ function SearchPage() {
             {/* Interactive Filter Dropdown Toggle Button */}
             <button
               type="button"
+<<<<<<< HEAD
               onClick={() => setShowFilterDropdown((v) => !v)}
               aria-expanded={showFilterDropdown}
               aria-label="Toggle filters and cuisines"
@@ -266,6 +267,14 @@ function SearchPage() {
                 showFilterDropdown || activeFilterCount > 0
                   ? "bg-primary text-primary-foreground ring-primary shadow-md shadow-primary/20"
                   : "bg-secondary text-foreground ring-border hover:bg-secondary/80"
+=======
+              onClick={() => setSort(s.id)}
+              aria-pressed={sort === s.id}
+              className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-black tracking-widest uppercase ring-1 ${
+                sort === s.id
+                  ? "bg-foreground text-background ring-transparent"
+                  : "bg-secondary ring-border"
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
               }`}
             >
               <SlidersHorizontal className="size-4" />
@@ -798,6 +807,7 @@ function SearchPage() {
           </section>
         ) : null}
 
+<<<<<<< HEAD
         {/* Restaurants Matching Section */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -842,6 +852,18 @@ function SearchPage() {
                   Clear Search & Filters
                 </button>
               )}
+=======
+        <section className="space-y-8 md:grid md:grid-cols-2 md:gap-8 md:space-y-0 lg:grid-cols-3">
+          <h2 className="label-mono text-muted-foreground md:col-span-full">
+            {matchedRestaurants.length} restaurant{matchedRestaurants.length === 1 ? "" : "s"}
+          </h2>
+          {matchedRestaurants.length === 0 ? (
+            <div className="rounded-3xl bg-secondary p-8 text-center ring-1 ring-border md:col-span-full">
+              <p className="text-lg font-black">Nothing matched</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try a different dish, cuisine or clear your filters.
+              </p>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

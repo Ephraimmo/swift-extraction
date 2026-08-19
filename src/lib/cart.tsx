@@ -14,12 +14,16 @@ import {
   type DeliveryAddress,
   type Dish,
   type FirebaseOrder,
+<<<<<<< HEAD
   type FirebaseRestaurantBranch,
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   type OrderLine,
   type OrderLineAddon,
   type OrderLineVariant,
   type OrderStatus,
   type PaymentMethod,
+<<<<<<< HEAD
   type Restaurant,
 } from "./data";
 import { useAuth } from "./auth";
@@ -50,6 +54,12 @@ import {
   useRestaurantPointsOverrides,
 } from "./firebase-adapters";
 import { get, getDb, ref, rtdbSet, rtdbSubscribe, set } from "./firebase";
+=======
+  type TimelineEvent,
+} from "./data";
+import { useAuth } from "./auth";
+import { get, getDb, ref, rtdbSubscribe, set } from "./firebase";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 export type CartLine = {
   lineId: string;
@@ -159,13 +169,17 @@ type CartState = {
   serviceFee: number;
   discount: number;
   total: number;
+<<<<<<< HEAD
   deliveryEtaMinutes: number;
   canCheckout: boolean;
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   orders: FirebaseOrder[];
   placedOrderIds: string[];
   placeOrder: (input: {
     address: DeliveryAddress | string;
     mode: "delivery" | "pickup";
+<<<<<<< HEAD
     paymentMethod?: PaymentMethod | undefined;
     specialInstructions?: string | null | undefined;
     paymentProofUrl?: string | null | undefined;
@@ -176,14 +190,26 @@ type CartState = {
     cardLast4?: string | null | undefined;
   }) => Promise<string>;
   getOrder: (id: string) => FirebaseOrder | undefined;
+=======
+    paymentMethod?: PaymentMethod;
+    specialInstructions?: string;
+  }) => Promise<string>;
+  getOrder: (id: string) => FirebaseOrder | undefined;
+  /** True while the signed-in customer's saved cart is being loaded from the cloud. */
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   syncing: boolean;
   storage: "cloud" | "local";
 };
 
 const CartContext = createContext<CartState | null>(null);
 
+<<<<<<< HEAD
 const CART_KEY = "hearth.cart.v4";
 const PLACED_ORDERS_KEY = "hearth.placed_orders.v4";
+=======
+const CART_KEY = "hearth.cart.v2";
+const PLACED_ORDERS_KEY = "hearth.placed_orders.v2";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 type StoredCart = {
   lines: CartLine[];
@@ -197,8 +223,11 @@ function cartPath(uid: string) {
   return `customerCarts/${uid}`;
 }
 
+<<<<<<< HEAD
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 /** Normalizes cart lines from raw storage. */
 function normalizeLines(value: unknown): CartLine[] {
   const raw = Array.isArray(value)
@@ -249,6 +278,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [tip, setTip] = useState(0);
   const [couponCode, setCouponCode] = useState<string | null>(null);
+<<<<<<< HEAD
   const [couponReason, setCouponReason] = useState<string | null>(null);
   const [mode, setMode] = useState<"delivery" | "pickup">("delivery");
   const [wantsToRedeemPoints, setWantsToRedeemPoints] = useState(false);
@@ -260,6 +290,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     lifetime_redeemed: 0,
     updated_at: new Date().toISOString(),
   });
+=======
+  const [placedOrderIds, setPlacedOrderIds] = useState<string[]>([]);
+  const [firebaseOrders, setFirebaseOrders] = useState<Record<string, FirebaseOrder>>({});
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   const [hydrated, setHydrated] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
@@ -276,12 +310,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLines(cart.lines ?? []);
     setTip(cart.tip ?? 0);
     setCouponCode(cart.couponCode ?? null);
+<<<<<<< HEAD
     if (cart.mode) setMode(cart.mode);
     if (cart.wantsToRedeemPoints) setWantsToRedeemPoints(cart.wantsToRedeemPoints);
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     setPlacedOrderIds(read<string[]>(PLACED_ORDERS_KEY, []));
     setHydrated(true);
   }, []);
 
+<<<<<<< HEAD
   // Fetch / subscribe to customer loyalty wallet
   useEffect(() => {
     if (!hydrated) return;
@@ -295,6 +333,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, [user, hydrated]);
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   // Listen to all orders from Firebase Realtime Database
   useEffect(() => {
     if (!hydrated) return;
@@ -304,6 +344,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [hydrated]);
 
+<<<<<<< HEAD
   // Credit loyalty points when delivery orders transition to "delivered" (§6 & §9 of Integration Guide)
   useEffect(() => {
     if (!hydrated) return;
@@ -334,6 +375,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, [firebaseOrders, user, placedOrderIds, pointsConfig, pointsOverrides, hydrated]);
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   // Load the signed-in customer's cart from Firebase
   useEffect(() => {
     if (!hydrated || !authHydrated) return;
@@ -408,7 +451,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }).catch((error: unknown) => console.warn("[cart] could not save cart", error));
     }, 400);
     return () => window.clearTimeout(timer);
+<<<<<<< HEAD
   }, [user, cloudReady, lines, tip, couponCode, mode, wantsToRedeemPoints]);
+=======
+  }, [user, cloudReady, lines, tip, couponCode]);
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
   const restaurantSlug = lines[0]?.restaurantSlug ?? null;
   const restaurant = useMemo(
@@ -534,6 +581,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setWantsToRedeemPoints(false);
   }, []);
 
+<<<<<<< HEAD
   const rawSubtotal =
     Math.round(lines.reduce((sum, l) => sum + l.unitPrice * l.qty, 0) * 100) / 100;
   const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
@@ -802,6 +850,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return quote.isWithinRange;
   }, [lines.length, totals.total, mode, quote.isWithinRange]);
 
+=======
+  const applyCoupon = useCallback((code: string) => {
+    const key = code.trim().toUpperCase();
+    if (!coupons[key]) return false;
+    setCouponCode(key);
+    return true;
+  }, []);
+
+  const subtotal = Math.round(lines.reduce((sum, l) => sum + l.unitPrice * l.qty, 0) * 100) / 100;
+  const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
+  const restaurant = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
+  const baseDelivery = restaurant?.deliveryFee ?? 25;
+  const coupon = couponCode ? coupons[couponCode] : undefined;
+  const deliveryFee = coupon?.type === "delivery" ? 0 : baseDelivery;
+  const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
+  const discount =
+    coupon?.type === "percent"
+      ? Math.min(100, Math.round(subtotal * (coupon.value / 100) * 100) / 100)
+      : coupon?.type === "fixed"
+        ? Math.min(coupon.value, subtotal)
+        : 0;
+  const total = Math.max(
+    0,
+    Math.round((subtotal + deliveryFee + serviceFee + tip - discount) * 100) / 100,
+  );
+
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   // Active customer orders merged from live Firebase
   const orders = useMemo<FirebaseOrder[]>(() => {
     const all = Object.values(firebaseOrders);
@@ -821,6 +896,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [firebaseOrders, user, placedOrderIds]);
 
   const placeOrder = useCallback<CartState["placeOrder"]>(
+<<<<<<< HEAD
     async (input) => {
       const {
         address,
@@ -845,10 +921,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
               postal_code: "2000",
               latitude: customerCoords.latitude,
               longitude: customerCoords.longitude,
+=======
+    async ({ address, mode, paymentMethod = "card", specialInstructions }) => {
+      const rest = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
+      const deliveryAddress: DeliveryAddress =
+        typeof address === "string"
+          ? {
+              label: mode === "pickup" ? "Pickup" : "Delivery",
+              street: address,
+              city: "Johannesburg",
+              postal_code: "2000",
+              latitude: -26.2041,
+              longitude: 28.0473,
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
               notes: specialInstructions || null,
             }
           : address;
 
+<<<<<<< HEAD
       const isDelivery = orderMode === "delivery";
       const override = findRestaurantPointsOverride(pointsOverrides, restaurantSlug, rest);
       const eff = resolveEffectivePointsConfig(pointsConfig, override);
@@ -865,6 +955,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
       const items = lines.map((l) => ({
         item_id: l.dishId || l.lineId,
         name: l.name,
@@ -873,6 +965,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         notes: l.notes || null,
         variant: l.variant,
         addons: l.addons,
+<<<<<<< HEAD
         points_per_item: orderPointsPerItem,
         points_per_items: orderPointsPerItem,
         points_earned: orderPointsPerItem * l.qty,
@@ -1002,11 +1095,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.warn("Could not save promo breakdown:", err);
       }
+=======
+      }));
+
+      const finalDeliveryFee = mode === "pickup" ? 0 : deliveryFee;
+
+      const orderId = await placeFirebaseOrder({
+        restaurant: {
+          id: rest?.slug || restaurantSlug || "restaurant-main",
+          name: rest?.name || "Restaurant Kitchen",
+          image: rest?.image || null,
+        },
+        customer: {
+          uid: user?.uid ?? null,
+          name: user?.name || "Customer",
+          phone: user?.phone || "+27 82 555 0100",
+          email: user?.email || "customer@hearth.app",
+        },
+        items,
+        delivery_address: mode === "pickup" ? null : deliveryAddress,
+        special_instructions: specialInstructions || null,
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === "cash" ? "pending" : "paid",
+        coupon_code: couponCode,
+        discount,
+        tip,
+        delivery_fee: finalDeliveryFee,
+      });
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
       setPlacedOrderIds((prev) => [orderId, ...prev]);
       clear();
       return orderId;
     },
+<<<<<<< HEAD
     [
       lines,
       restaurantSlug,
@@ -1024,6 +1146,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       pointsDiscount,
       clear,
     ],
+=======
+    [lines, restaurantSlug, user, deliveryFee, discount, tip, couponCode, clear],
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   );
 
   const getOrder = useCallback(

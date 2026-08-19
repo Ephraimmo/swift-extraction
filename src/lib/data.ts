@@ -1,4 +1,5 @@
 import { rtdbSet } from "./firebase";
+<<<<<<< HEAD
 import type { DeliveryTier } from "./pricing";
 import dishBowl from "@/assets/dish-bowl.jpg";
 import dishBurger from "@/assets/dish-burger.jpg";
@@ -10,6 +11,8 @@ import restSushi from "@/assets/rest-sushi.jpg";
 import restTaqueria from "@/assets/rest-taqueria.jpg";
 
 export type { DeliveryTier };
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 /**
  * Shared domain types plus a live registry that Firebase fills at runtime.
@@ -28,6 +31,7 @@ export type OrderStatus =
   | "cancelled"
   | "refunded";
 
+<<<<<<< HEAD
 export type PaymentMethod =
   | "card"
   | "cash_on_delivery"
@@ -133,6 +137,9 @@ export interface OrderPaymentEvidence {
   proof_url?: string | null; // public URL for EFT proof
   notes?: string | null;
 }
+=======
+export type PaymentMethod = "card" | "cash" | "wallet" | "eft" | "apple_pay" | "google_pay";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 export interface DeliveryAddress {
   label: string | null; // "Home" | "Work" | "Custom" | null
@@ -167,9 +174,12 @@ export interface OrderLine {
   notes: string | null; // special instructions for this line ("No onions")
   variant: OrderLineVariant | null;
   addons: OrderLineAddon[];
+<<<<<<< HEAD
   points_per_item?: number;
   points_per_items?: number;
   points_earned?: number;
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 }
 
 export interface TimelineEvent {
@@ -191,7 +201,10 @@ export interface DriverLiveLocation {
 export interface FirebaseOrder {
   id: string; // uid("ord")
   order_number: string; // `FF-${Date.now().toString().slice(-6)}`
+<<<<<<< HEAD
   order_type: "delivery" | "pickup"; // "delivery" or "pickup" (§3.5 of Integration Guide)
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   status: OrderStatus; // initial status = "pending"
   placed_at: string; // ISO timestamp
   accepted_at: string | null;
@@ -211,12 +224,16 @@ export interface FirebaseOrder {
   coupon_code: string | null;
   payment_method: PaymentMethod;
   payment_status: "pending" | "paid" | "failed" | "refunded";
+<<<<<<< HEAD
   payment?: OrderPaymentEvidence;
   receipt_number?: string;
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   delivery_address: DeliveryAddress | null;
   special_instructions: string | null;
   scheduled_for: string | null;
 
+<<<<<<< HEAD
   // Loyalty points allocation snapshot
   points_per_order?: number;
   points_per_items?: number;
@@ -236,6 +253,9 @@ export interface FirebaseOrder {
   restaurantId?: string | null;
 
   // Restaurant snapshot
+=======
+  // Restaurant snapshot (denormalised so console doesn't have to re-fetch)
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   restaurant_id: string;
   restaurant_name: string;
   restaurant_image: string | null;
@@ -733,6 +753,7 @@ export function uid(prefix: string) {
 
 export async function placeFirebaseOrder(input: {
   restaurant: { id: string; name: string; image: string | null };
+<<<<<<< HEAD
   branch?: {
     id: string;
     name: string;
@@ -745,6 +766,8 @@ export async function placeFirebaseOrder(input: {
     delivery_radius_km?: number | null;
     distance_km?: number | null;
   } | null;
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   customer: { uid: string | null; name: string; phone: string | null; email: string | null };
   items: Array<{
     item_id: string;
@@ -754,6 +777,7 @@ export async function placeFirebaseOrder(input: {
     notes: string | null;
     variant: OrderLineVariant | null;
     addons: OrderLineAddon[];
+<<<<<<< HEAD
     points_per_item?: number;
     points_per_items?: number;
     points_earned?: number;
@@ -777,12 +801,26 @@ export async function placeFirebaseOrder(input: {
   eta_at?: string | null;
   points_per_order?: number;
   points_per_items?: number;
+=======
+  }>;
+  delivery_address: DeliveryAddress | null;
+  special_instructions: string | null;
+  payment_method: PaymentMethod;
+  payment_status: "pending" | "paid";
+  coupon_code?: string | null;
+  discount?: number;
+  tip?: number;
+  delivery_fee?: number;
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 }): Promise<string> {
   const orderId = uid("ord");
   const ts = new Date().toISOString();
   const orderNumber = `FF-${Date.now().toString().slice(-6)}`;
+<<<<<<< HEAD
   const order_type = input.order_type || (input.delivery_address ? "delivery" : "pickup");
   const isDelivery = order_type === "delivery";
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
   const lines: Record<string, OrderLine> = {};
   let subtotal = 0;
@@ -796,6 +834,7 @@ export async function placeFirebaseOrder(input: {
       Math.round(((it.unit_price || 0) * it.quantity + addonTotal + variantDelta) * 100) / 100;
     subtotal += line_total;
     const lineId = uid("ln");
+<<<<<<< HEAD
     const itemPts = isDelivery ? Number(it.points_per_items ?? it.points_per_item ?? 0) : 0;
     lines[lineId] = {
       id: lineId,
@@ -862,11 +901,26 @@ export async function placeFirebaseOrder(input: {
   const branchDeliveryRadius =
     branchData?.delivery_radius_km != null ? Number(branchData.delivery_radius_km) : 10;
   const deliveryDistanceKm = isDelivery ? (branchData?.distance_km ?? null) : null;
+=======
+    lines[lineId] = { id: lineId, line_total, ...it };
+  }
+  subtotal = Math.round(subtotal * 100) / 100;
+  const delivery_fee = input.delivery_fee ?? 25;
+  const service_fee = Math.round(subtotal * 0.05 * 100) / 100;
+  const tax = 0;
+  const tip = input.tip ?? 0;
+  const discount = input.discount ?? 0;
+  const total =
+    Math.round((subtotal + delivery_fee + service_fee + tax + tip - discount) * 100) / 100;
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
   const order: FirebaseOrder = {
     id: orderId,
     order_number: orderNumber,
+<<<<<<< HEAD
     order_type,
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     status: "pending",
     placed_at: ts,
     accepted_at: null,
@@ -874,8 +928,13 @@ export async function placeFirebaseOrder(input: {
     picked_up_at: null,
     delivered_at: null,
     cancelled_at: null,
+<<<<<<< HEAD
     eta_minutes: input.eta_minutes ?? null,
     eta_at: input.eta_at ?? null,
+=======
+    eta_minutes: null,
+    eta_at: null,
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     subtotal,
     delivery_fee,
     service_fee,
@@ -885,6 +944,7 @@ export async function placeFirebaseOrder(input: {
     total,
     coupon_code: input.coupon_code ?? null,
     payment_method: input.payment_method,
+<<<<<<< HEAD
     payment_status: paymentStatus,
     payment: paymentEvidence,
     receipt_number: receiptNumber,
@@ -910,6 +970,12 @@ export async function placeFirebaseOrder(input: {
     branchId: branchId,
     restaurantId: input.restaurant.id,
 
+=======
+    payment_status: input.payment_status,
+    delivery_address: input.delivery_address,
+    special_instructions: input.special_instructions ?? null,
+    scheduled_for: null,
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     restaurant_id: input.restaurant.id,
     restaurant_name: input.restaurant.name,
     restaurant_image: input.restaurant.image,
@@ -928,15 +994,22 @@ export async function placeFirebaseOrder(input: {
 
   await rtdbSet(`orders/${orderId}`, order);
   await rtdbSet(`orders/${orderId}/items`, lines);
+<<<<<<< HEAD
   await rtdbSet(`orders/${orderId}/payment`, paymentEvidence);
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   await rtdbSet(`orders/${orderId}/timeline/${uid("tl")}`, {
     id: uid("tl"),
     status: "placed",
     at: ts,
+<<<<<<< HEAD
     note:
       order_type === "pickup"
         ? "Pickup order placed by customer"
         : `Delivery order placed by customer (${branchName})`,
+=======
+    note: "Order placed by customer",
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     actor: input.customer.uid,
   });
 

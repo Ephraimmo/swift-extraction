@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+<<<<<<< HEAD
   Banknote,
   Bike,
   Building2,
@@ -13,10 +14,16 @@ import {
   ExternalLink,
   FileCheck,
   FileText,
+=======
+  Bike,
+  CheckCircle2,
+  Clock,
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   MapPin,
   MessageCircle,
   Navigation,
   Phone,
+<<<<<<< HEAD
   Printer,
   Receipt,
   ReceiptText,
@@ -27,17 +34,30 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+=======
+  RotateCcw,
+  ShieldAlert,
+  Star,
+} from "lucide-react";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 import {
   money,
   type DriverLiveLocation,
   type FirebaseOrder,
   type OrderLine,
+<<<<<<< HEAD
   type OrderPaymentEvidence,
   type OrderStatus,
   type TimelineEvent,
 } from "@/lib/data";
 import { rtdbSet, rtdbSubscribe } from "@/lib/firebase";
 import { usePointsConfig, useRestaurantPointsOverrides } from "@/lib/firebase-adapters";
+=======
+  type OrderStatus,
+  type TimelineEvent,
+} from "@/lib/data";
+import { rtdbSubscribe } from "@/lib/firebase";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 export const Route = createFileRoute("/orders/$orderId")({
   head: () => ({
@@ -57,7 +77,11 @@ export const Route = createFileRoute("/orders/$orderId")({
   component: TrackOrder,
 });
 
+<<<<<<< HEAD
 const DELIVERY_STAGE_PROGRESSION: Array<{
+=======
+const STAGE_PROGRESSION: Array<{
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   status: OrderStatus | "placed";
   label: string;
   detail: string;
@@ -73,6 +97,7 @@ const DELIVERY_STAGE_PROGRESSION: Array<{
   { status: "delivered", label: "Delivered", detail: "Enjoy your meal!" },
 ];
 
+<<<<<<< HEAD
 const PICKUP_STAGE_PROGRESSION: Array<{
   status: OrderStatus | "placed";
   label: string;
@@ -91,20 +116,28 @@ const PICKUP_STAGE_PROGRESSION: Array<{
   { status: "delivered", label: "Collected — enjoy!", detail: "Order closed" },
 ];
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 function TrackOrder() {
   const { orderId } = Route.useParams();
   const navigate = useNavigate();
 
+<<<<<<< HEAD
   const pointsConfig = usePointsConfig();
   const pointsOverrides = useRestaurantPointsOverrides();
 
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   const [order, setOrder] = useState<FirebaseOrder | null>(null);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [driverLocation, setDriverLocation] = useState<DriverLiveLocation | null>(null);
+<<<<<<< HEAD
   const [paymentEvidence, setPaymentEvidence] = useState<OrderPaymentEvidence | null>(null);
   const [openReceiptModal, setOpenReceiptModal] = useState(false);
   const [retryingCard, setRetryingCard] = useState(false);
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   const [loading, setLoading] = useState(true);
 
   // Subscribe to live order updates from Firebase Realtime Database
@@ -113,6 +146,7 @@ function TrackOrder() {
 
     const unsubOrder = rtdbSubscribe<FirebaseOrder>(`orders/${orderId}`, (o) => {
       setOrder(o);
+<<<<<<< HEAD
       if (o?.payment) {
         setPaymentEvidence(o.payment);
       }
@@ -125,6 +159,11 @@ function TrackOrder() {
       }
     });
 
+=======
+      setLoading(false);
+    });
+
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     const unsubLines = rtdbSubscribe<Record<string, OrderLine>>(
       `orders/${orderId}/items`,
       (itemsMap) => {
@@ -154,7 +193,10 @@ function TrackOrder() {
 
     return () => {
       unsubOrder();
+<<<<<<< HEAD
       unsubPayment();
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
       unsubLines();
       unsubTimeline();
       unsubDriver();
@@ -165,6 +207,7 @@ function TrackOrder() {
   const isCancelled = currentStatus === "cancelled";
   const isRefunded = currentStatus === "refunded";
   const isDelivered = currentStatus === "delivered";
+<<<<<<< HEAD
   const isPickup =
     order?.order_type === "pickup" ||
     (!order?.delivery_address && (order?.delivery_fee ?? 0) === 0);
@@ -210,13 +253,21 @@ function TrackOrder() {
       setRetryingCard(false);
     }
   }
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
   // Determine stage progression index
   const stageIndex = useMemo(() => {
     if (isCancelled || isRefunded) return -1;
+<<<<<<< HEAD
     const idx = stageProgression.findIndex((s) => s.status === currentStatus);
     return idx >= 0 ? idx : 1; // default to pending/placed
   }, [currentStatus, isCancelled, isRefunded, stageProgression]);
+=======
+    const idx = STAGE_PROGRESSION.findIndex((s) => s.status === currentStatus);
+    return idx >= 0 ? idx : 1; // default to pending/placed
+  }, [currentStatus, isCancelled, isRefunded]);
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
   // Set of statuses recorded in the timeline
   const timelineStatusSet = useMemo(() => {
@@ -259,7 +310,11 @@ function TrackOrder() {
 
   const progressPercent = Math.min(
     100,
+<<<<<<< HEAD
     Math.max(10, ((Math.max(0, stageIndex) + 1) / stageProgression.length) * 100),
+=======
+    Math.max(10, ((Math.max(0, stageIndex) + 1) / STAGE_PROGRESSION.length) * 100),
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   );
 
   return (
@@ -281,6 +336,7 @@ function TrackOrder() {
               {order.order_number || order.id}
             </p>
           </div>
+<<<<<<< HEAD
         </div>
 
         <div className="flex items-center gap-2">
@@ -301,7 +357,23 @@ function TrackOrder() {
           >
             {(order.status || "pending").replace(/_/g, " ")}
           </span>
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
         </div>
+
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-black tracking-wider uppercase ${
+            isCancelled
+              ? "bg-destructive/15 text-destructive"
+              : isRefunded
+                ? "bg-amber-500/15 text-amber-600"
+                : isDelivered
+                  ? "bg-emerald-500/15 text-emerald-600"
+                  : "bg-primary/15 text-primary"
+          }`}
+        >
+          {order.status.replace(/_/g, " ")}
+        </span>
       </header>
 
       <main className="space-y-6 px-4 pt-6 pb-32">
@@ -333,7 +405,11 @@ function TrackOrder() {
         <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-secondary ring-1 ring-border">
           <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(var(--color-border)_1px,transparent_1px),linear-gradient(90deg,var(--color-border)_1px,transparent_1px)] [background-size:28px_28px]" />
 
+<<<<<<< HEAD
           {!isPickup && driverLocation ? (
+=======
+          {driverLocation ? (
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
               <div className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-lg">
                 <Navigation className="size-4 animate-pulse" />
@@ -359,23 +435,34 @@ function TrackOrder() {
                 className="absolute top-1/2 grid size-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-xl bg-primary text-[10px] font-black text-primary-foreground shadow-xl transition-all duration-1000"
                 style={{ left: `calc(24px + (100% - 48px) * ${progressPercent / 100})` }}
               >
+<<<<<<< HEAD
                 {isPickup ? "KTC" : order.driver_id ? "DRV" : "KTC"}
+=======
+                {order.driver_id ? "DRV" : "KTC"}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
               </div>
             </>
           )}
 
           <span className="label-mono absolute bottom-4 left-4 rounded-full bg-background/90 px-3 py-1.5 ring-1 ring-border backdrop-blur max-w-[80%] truncate">
+<<<<<<< HEAD
             {isPickup
               ? `Pickup at ${order.restaurant_name}`
               : order.delivery_address
                 ? `${order.delivery_address.street}, ${order.delivery_address.city}`
                 : "Delivery"}
+=======
+            {order.delivery_address
+              ? `${order.delivery_address.street}, ${order.delivery_address.city}`
+              : "Pickup at kitchen"}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           </span>
         </div>
 
         {/* ETA & Status Banner */}
         <div className="rounded-3xl bg-foreground p-6 text-background">
           <span className="label-mono opacity-60">
+<<<<<<< HEAD
             {isPickup
               ? currentStatus === "picked_up" || isDelivered
                 ? "Collection Status"
@@ -406,16 +493,40 @@ function TrackOrder() {
           <p className="mt-2 text-sm opacity-80">
             {stageProgression.find((s) => s.status === currentStatus)?.detail ??
               (isPickup ? "Ready for collection at the kitchen." : "Your order is being handled.")}
+=======
+            {isDelivered ? "Delivery Status" : "Estimated Arrival"}
+          </span>
+          <p className="mt-1 text-3xl font-black tracking-tight">
+            {isDelivered
+              ? "Delivered"
+              : isCancelled
+                ? "Cancelled"
+                : isRefunded
+                  ? "Refunded"
+                  : order.eta_minutes
+                    ? `${order.eta_minutes} min`
+                    : "Calculating…"}
+          </p>
+          <p className="mt-2 text-sm opacity-80">
+            {STAGE_PROGRESSION.find((s) => s.status === currentStatus)?.detail ??
+              "Your order is being handled."}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           </p>
         </div>
 
         {/* Status Progression Timeline */}
         <div className="rounded-3xl bg-secondary p-5 ring-1 ring-border">
+<<<<<<< HEAD
           <h2 className="label-mono mb-4 text-muted-foreground">
             {isPickup ? "Pickup Order Progress" : "Delivery Order Progress"}
           </h2>
           <ol className="space-y-4">
             {stageProgression.map((stage, idx) => {
+=======
+          <h2 className="label-mono mb-4 text-muted-foreground">Order Progress</h2>
+          <ol className="space-y-4">
+            {STAGE_PROGRESSION.map((stage, idx) => {
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
               const hasOccurred =
                 stageIndex >= idx ||
                 timelineStatusSet.has(stage.status) ||
@@ -434,7 +545,11 @@ function TrackOrder() {
                             : "bg-border"
                       }`}
                     />
+<<<<<<< HEAD
                     {idx < stageProgression.length - 1 ? (
+=======
+                    {idx < STAGE_PROGRESSION.length - 1 ? (
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
                       <span
                         className={`h-7 w-0.5 transition-colors ${
                           hasOccurred ? "bg-primary/40" : "bg-border"
@@ -457,8 +572,13 @@ function TrackOrder() {
           </ol>
         </div>
 
+<<<<<<< HEAD
         {/* Driver Card or Pickup Instructions */}
         {!isPickup && (order.driver_id || order.driver_name) ? (
+=======
+        {/* Driver Card — Appears when driver_id / driver_name is populated */}
+        {order.driver_id || order.driver_name ? (
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           <section className="flex items-center gap-4 rounded-3xl bg-card p-5 ring-1 ring-border">
             {order.driver_photo ? (
               <img
@@ -482,6 +602,7 @@ function TrackOrder() {
                   {order.driver_rating.toFixed(1)}
                 </div>
               ) : null}
+<<<<<<< HEAD
             </div>
 
             {order.driver_phone ? (
@@ -550,6 +671,54 @@ function TrackOrder() {
           </section>
         ) : null}
 
+=======
+            </div>
+
+            {order.driver_phone ? (
+              <a
+                href={`tel:${order.driver_phone}`}
+                className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md transition-transform active:scale-95"
+                aria-label="Call driver"
+              >
+                <Phone className="size-4" />
+              </a>
+            ) : null}
+          </section>
+        ) : (
+          <div className="rounded-2xl bg-secondary/50 p-4 text-center ring-1 ring-border text-xs text-muted-foreground">
+            Driver will be assigned once kitchen finishes preparation.
+          </div>
+        )}
+
+        {/* Live Timeline Audit Trail */}
+        {timeline.length > 0 ? (
+          <section className="space-y-2 rounded-3xl bg-secondary p-5 ring-1 ring-border">
+            <h2 className="label-mono mb-2 text-muted-foreground">Activity Log</h2>
+            <div className="space-y-2">
+              {timeline.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex justify-between items-start text-xs border-b border-border/50 pb-2"
+                >
+                  <div>
+                    <span className="font-bold capitalize">{event.note || event.status}</span>
+                    {event.actor ? (
+                      <span className="ml-1 text-muted-foreground">by {event.actor}</span>
+                    ) : null}
+                  </div>
+                  <span className="font-mono text-muted-foreground shrink-0 ml-2">
+                    {new Date(event.at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
         {/* Contact Restaurant / Support */}
         <section className="grid grid-cols-2 gap-2">
           <a
@@ -559,16 +728,24 @@ function TrackOrder() {
             <Phone className="size-4" aria-hidden />
             Call kitchen
           </a>
+<<<<<<< HEAD
           <Link
             to="/support"
             search={{ orderId: order.id }}
             className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[11px] font-black tracking-widest uppercase ring-1 ring-primary/30 cursor-pointer"
+=======
+          <button
+            type="button"
+            onClick={() => alert("Customer Support: support@hearth.app | +27 80 000 3344")}
+            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-secondary text-[11px] font-black tracking-widest uppercase ring-1 ring-border cursor-pointer"
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           >
             <MessageCircle className="size-4" aria-hidden />
             Live Support
           </Link>
         </section>
 
+<<<<<<< HEAD
         {/* Live Payment & Proof of Payment Status Card (§3.8 & §4) */}
         <section className="rounded-3xl bg-secondary p-5 ring-1 ring-border space-y-3">
           <div className="flex items-center justify-between">
@@ -724,6 +901,44 @@ function TrackOrder() {
               <span>Subtotal</span>
               <span className="font-mono font-bold text-foreground">{money(order.subtotal)}</span>
             </div>
+=======
+        {/* Order Receipt / Items Breakdown */}
+        <section className="space-y-2 rounded-3xl bg-secondary p-5 ring-1 ring-border">
+          <h2 className="label-mono mb-2 text-muted-foreground">Receipt</h2>
+          {lines.length > 0 ? (
+            lines.map((l) => (
+              <div key={l.id} className="flex justify-between text-sm py-1">
+                <div>
+                  <span className="font-bold text-foreground">
+                    {l.quantity}× {l.name}
+                  </span>
+                  {l.variant ? (
+                    <span className="block text-xs text-muted-foreground">
+                      Size: {l.variant.name}
+                    </span>
+                  ) : null}
+                  {l.addons && l.addons.length > 0 ? (
+                    <span className="block text-xs text-muted-foreground">
+                      Extras: {l.addons.map((a) => a.name).join(", ")}
+                    </span>
+                  ) : null}
+                  {l.notes ? (
+                    <span className="block text-xs italic text-muted-foreground">"{l.notes}"</span>
+                  ) : null}
+                </div>
+                <span className="font-mono font-bold">{money(l.line_total)}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground">Item details loaded from database.</p>
+          )}
+
+          <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span className="font-mono font-bold text-foreground">{money(order.subtotal)}</span>
+            </div>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             <div className="flex justify-between text-muted-foreground">
               <span>Delivery fee</span>
               <span className="font-mono font-bold text-foreground">
