@@ -1,0 +1,9 @@
+{
+  "name": "swift-extraction-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix swift-extraction run dev",
+    "build": "npm --prefix swift-extraction run build",
+    "lint": "npm --prefix swift-extraction run lint"
+  }
+}
