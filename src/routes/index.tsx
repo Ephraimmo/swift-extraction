@@ -64,7 +64,10 @@ function Discover() {
       <main className="pb-44 md:pb-24">
         <h1 className="sr-only">Discover food near you</h1>
 
-        <section aria-label="Categories" className="no-scrollbar flex gap-6 overflow-x-auto px-4 py-6 md:flex-wrap md:justify-start md:overflow-visible">
+        <section
+          aria-label="Categories"
+          className="no-scrollbar flex gap-6 overflow-x-auto px-4 py-6 md:flex-wrap md:justify-start md:overflow-visible"
+        >
           {categories.map((cat, i) => (
             <Link
               key={cat.id}
@@ -88,7 +91,10 @@ function Discover() {
           ))}
         </section>
 
-        <section aria-label="Todays deals" className="no-scrollbar mb-8 flex gap-3 overflow-x-auto px-4 md:grid md:grid-cols-3 md:overflow-visible">
+        <section
+          aria-label="Todays deals"
+          className="no-scrollbar mb-8 flex gap-3 overflow-x-auto px-4 md:grid md:grid-cols-3 md:overflow-visible"
+        >
           {promotions.map((deal) => (
             <div
               key={deal.id}

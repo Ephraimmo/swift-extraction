@@ -117,7 +117,9 @@ function SearchPage() {
               onClick={() => setSort(s.id)}
               aria-pressed={sort === s.id}
               className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-black tracking-widest uppercase ring-1 ${
-                sort === s.id ? "bg-foreground text-background ring-transparent" : "bg-secondary ring-border"
+                sort === s.id
+                  ? "bg-foreground text-background ring-transparent"
+                  : "bg-secondary ring-border"
               }`}
             >
               {s.label}
@@ -170,7 +172,6 @@ function SearchPage() {
                 Try a different dish, cuisine or clear your filters.
               </p>
             </div>
-
           ) : (
             matchedRestaurants.map((r, i) => (
               <RestaurantCard key={r.slug} restaurant={r} delayMs={i * 80} />

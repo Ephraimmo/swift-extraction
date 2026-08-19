@@ -12,7 +12,8 @@ export const Route = createFileRoute("/cart")({
       { title: "Your cart — Hearth" },
       {
         name: "description",
-        content: "Review your items, apply a promo code, add a tip and see the full price breakdown.",
+        content:
+          "Review your items, apply a promo code, add a tip and see the full price breakdown.",
       },
       { property: "og:title", content: "Your cart — Hearth" },
       {
@@ -99,7 +100,10 @@ function CartPage() {
         <main className="space-y-8 px-4 pt-6 pb-44 md:pb-24">
           <ul className="space-y-3">
             {lines.map((line) => (
-              <li key={line.lineId} className="flex gap-3 rounded-3xl bg-card p-3 ring-1 ring-border">
+              <li
+                key={line.lineId}
+                className="flex gap-3 rounded-3xl bg-card p-3 ring-1 ring-border"
+              >
                 <img
                   src={line.image}
                   alt={line.name}
@@ -130,7 +134,9 @@ function CartPage() {
                       >
                         <Minus className="size-3.5" aria-hidden />
                       </button>
-                      <span className="w-5 text-center font-mono text-sm font-bold">{line.qty}</span>
+                      <span className="w-5 text-center font-mono text-sm font-bold">
+                        {line.qty}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setQty(line.lineId, line.qty + 1)}

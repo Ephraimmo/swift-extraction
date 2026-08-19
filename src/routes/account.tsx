@@ -78,8 +78,10 @@ function AccountPage() {
       <main className="space-y-8 px-4 pt-6 pb-44 md:pb-24">
         <section className="rounded-3xl bg-foreground p-6 text-background">
           <span className="label-mono opacity-60">Hearth wallet</span>
-          <p className="mt-1 font-mono text-3xl font-black">£18.40</p>
-          <p className="mt-2 text-xs opacity-60">Cashback and refund credits apply automatically.</p>
+          <p className="mt-1 font-mono text-3xl font-black">R 180.40</p>
+          <p className="mt-2 text-xs opacity-60">
+            Cashback and refund credits apply automatically.
+          </p>
         </section>
 
         <section>

@@ -7,9 +7,22 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { coupons, getRestaurant, type Dish } from "./data";
+import {
+  coupons,
+  getRestaurant,
+  placeFirebaseOrder,
+  type DeliveryAddress,
+  type Dish,
+  type FirebaseOrder,
+  type OrderLine,
+  type OrderLineAddon,
+  type OrderLineVariant,
+  type OrderStatus,
+  type PaymentMethod,
+  type TimelineEvent,
+} from "./data";
 import { useAuth } from "./auth";
-import { get, getDb, ref, set } from "./firebase";
+import { get, getDb, ref, rtdbSubscribe, set } from "./firebase";
 
 export type CartLine = {
   lineId: string;
@@ -17,8 +30,11 @@ export type CartLine = {
   restaurantSlug: string;
   name: string;
   image: string;
+  basePrice: number;
   unitPrice: number;
   sizeLabel: string;
+  variant: OrderLineVariant | null;
+  addons: OrderLineAddon[];
   extras: string[];
   removed: string[];
   notes: string;
@@ -27,24 +43,19 @@ export type CartLine = {
 
 export type OrderStage =
   | "placed"
+  | "pending"
   | "accepted"
   | "preparing"
   | "ready"
-  | "driver_assigned"
-  | "en_route"
-  | "delivered";
+  | "assigned"
+  | "picked_up"
+  | "on_the_way"
+  | "delivered"
+  | "cancelled"
+  | "refunded";
 
-export type Order = {
-  id: string;
-  restaurantSlug: string;
-  restaurantName: string;
+export type Order = FirebaseOrder & {
   lines: CartLine[];
-  total: number;
-  placedAt: number;
-  etaAt: number;
-  address: string;
-  mode: "delivery" | "pickup";
-  driver: { name: string; vehicle: string; rating: number };
 };
 
 type CartState = {
@@ -73,9 +84,15 @@ type CartState = {
   serviceFee: number;
   discount: number;
   total: number;
-  orders: Order[];
-  placeOrder: (input: { address: string; mode: "delivery" | "pickup" }) => Order;
-  getOrder: (id: string) => Order | undefined;
+  orders: FirebaseOrder[];
+  placedOrderIds: string[];
+  placeOrder: (input: {
+    address: DeliveryAddress | string;
+    mode: "delivery" | "pickup";
+    paymentMethod?: PaymentMethod;
+    specialInstructions?: string;
+  }) => Promise<string>;
+  getOrder: (id: string) => FirebaseOrder | undefined;
   /** True while the signed-in customer's saved cart is being loaded from the cloud. */
   syncing: boolean;
   /** "cloud" once the cart is saved to the customer's account, else "local". */
@@ -84,8 +101,8 @@ type CartState = {
 
 const CartContext = createContext<CartState | null>(null);
 
-const CART_KEY = "hearth.cart.v1";
-const ORDERS_KEY = "hearth.orders.v1";
+const CART_KEY = "hearth.cart.v2";
+const PLACED_ORDERS_KEY = "hearth.placed_orders.v2";
 
 type StoredCart = { lines: CartLine[]; tip: number; couponCode: string | null };
 
@@ -93,9 +110,13 @@ function cartPath(uid: string) {
   return `customerCarts/${uid}`;
 }
 
-/** Firebase drops empty arrays/strings, so rebuild a complete CartLine on read. */
+/** Normalizes cart lines from raw storage. */
 function normalizeLines(value: unknown): CartLine[] {
-  const raw = Array.isArray(value) ? value : value && typeof value === "object" ? Object.values(value) : [];
+  const raw = Array.isArray(value)
+    ? value
+    : value && typeof value === "object"
+      ? Object.values(value)
+      : [];
   return raw
     .filter((l): l is Record<string, unknown> => !!l && typeof l === "object")
     .map((l) => ({
@@ -104,8 +125,11 @@ function normalizeLines(value: unknown): CartLine[] {
       restaurantSlug: String(l["restaurantSlug"] ?? ""),
       name: String(l["name"] ?? "Item"),
       image: String(l["image"] ?? ""),
+      basePrice: Number(l["basePrice"] ?? l["unitPrice"] ?? 0),
       unitPrice: Number(l["unitPrice"] ?? 0),
       sizeLabel: String(l["sizeLabel"] ?? "Regular"),
+      variant: (l["variant"] as OrderLineVariant) ?? null,
+      addons: Array.isArray(l["addons"]) ? (l["addons"] as OrderLineAddon[]) : [],
       extras: Array.isArray(l["extras"]) ? (l["extras"] as string[]) : [],
       removed: Array.isArray(l["removed"]) ? (l["removed"] as string[]) : [],
       notes: String(l["notes"] ?? ""),
@@ -128,14 +152,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [tip, setTip] = useState(0);
   const [couponCode, setCouponCode] = useState<string | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [placedOrderIds, setPlacedOrderIds] = useState<string[]>([]);
+  const [firebaseOrders, setFirebaseOrders] = useState<Record<string, FirebaseOrder>>({});
   const [hydrated, setHydrated] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  /** Guards cloud writes until the signed-in cart has been read back. */
   const [cloudReady, setCloudReady] = useState(false);
 
+  // Initialize from local storage
   useEffect(() => {
-    const cart = read<{ lines: CartLine[]; tip: number; couponCode: string | null }>(CART_KEY, {
+    const cart = read<StoredCart>(CART_KEY, {
       lines: [],
       tip: 0,
       couponCode: null,
@@ -143,11 +168,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLines(cart.lines ?? []);
     setTip(cart.tip ?? 0);
     setCouponCode(cart.couponCode ?? null);
-    setOrders(read<Order[]>(ORDERS_KEY, []));
+    setPlacedOrderIds(read<string[]>(PLACED_ORDERS_KEY, []));
     setHydrated(true);
   }, []);
 
-  /* Load the signed-in customer's cart from Firebase, merging any guest cart. */
+  // Listen to all orders from Firebase Realtime Database
+  useEffect(() => {
+    if (!hydrated) return;
+    const unsubscribe = rtdbSubscribe<Record<string, FirebaseOrder>>("orders", (all) => {
+      setFirebaseOrders(all ?? {});
+    });
+    return () => unsubscribe();
+  }, [hydrated]);
+
+  // Load the signed-in customer's cart from Firebase
   useEffect(() => {
     if (!hydrated || !authHydrated) return;
     if (!user) {
@@ -162,11 +196,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     void get(ref(db, cartPath(user.uid)))
       .then((snap) => {
         if (cancelled) return;
-        const savedRaw = (snap.val() ?? null) as (Omit<StoredCart, "lines"> & { lines?: unknown }) | null;
+        const savedRaw = (snap.val() ?? null) as
+          (Omit<StoredCart, "lines"> & { lines?: unknown }) | null;
         const saved = savedRaw ? { ...savedRaw, lines: normalizeLines(savedRaw.lines) } : null;
         setLines((current) => {
-          // A cart built while signed out wins, so nothing the customer just
-          // added is lost when they sign in.
           if (current.length > 0) return current;
           return saved?.lines ?? [];
         });
@@ -188,12 +221,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [user, hydrated, authHydrated]);
 
+  // Persist cart to localStorage
   useEffect(() => {
     if (!hydrated) return;
     window.localStorage.setItem(CART_KEY, JSON.stringify({ lines, tip, couponCode }));
   }, [lines, tip, couponCode, hydrated]);
 
-  /* Mirror every change to the customer's account so it survives sign-out. */
+  // Persist placed orders IDs to localStorage
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(PLACED_ORDERS_KEY, JSON.stringify(placedOrderIds));
+  }, [placedOrderIds, hydrated]);
+
+  // Mirror cart to user's Firebase cart node when signed in
   useEffect(() => {
     if (!user || !cloudReady) return;
     const db = getDb();
@@ -209,29 +249,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [user, cloudReady, lines, tip, couponCode]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  }, [orders, hydrated]);
-
   const restaurantSlug = lines[0]?.restaurantSlug ?? null;
 
   const addLine = useCallback<CartState["addLine"]>(
     ({ dish, restaurantSlug: slug, sizeId, extraIds, removed, notes, qty }) => {
       const size = dish.sizes.find((s) => s.id === sizeId) ?? dish.sizes[0];
-      const extras = dish.extras.filter((e) => extraIds.includes(e.id));
-      const unitPrice =
-        dish.price + (size?.delta ?? 0) + extras.reduce((sum, e) => sum + e.price, 0);
+      const selectedExtras = dish.extras.filter((e) => extraIds.includes(e.id));
+      const extrasPrice = selectedExtras.reduce((sum, e) => sum + e.price, 0);
+      const delta = size?.delta ?? 0;
+      const unitPrice = Math.round((dish.price + delta + extrasPrice) * 100) / 100;
+
+      const variant: OrderLineVariant | null = size
+        ? { id: size.id, name: size.label, price_delta: size.delta }
+        : null;
+
+      const addons: OrderLineAddon[] = selectedExtras.map((e) => ({
+        id: e.id,
+        name: e.label,
+        price: e.price,
+        quantity: 1,
+      }));
 
       const line: CartLine = {
-        lineId: `${dish.id}-${Date.now()}`,
+        lineId: `${dish.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         dishId: dish.id,
         restaurantSlug: slug,
         name: dish.name,
         image: dish.image,
+        basePrice: dish.price,
         unitPrice,
         sizeLabel: size?.label ?? "Regular",
-        extras: extras.map((e) => e.label),
+        variant,
+        addons,
+        extras: selectedExtras.map((e) => e.label),
         removed,
         notes,
         qty,
@@ -275,45 +325,106 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
-  const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.qty, 0);
+  const subtotal = Math.round(lines.reduce((sum, l) => sum + l.unitPrice * l.qty, 0) * 100) / 100;
   const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
   const restaurant = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
-  const baseDelivery = restaurant?.deliveryFee ?? 0;
+  const baseDelivery = restaurant?.deliveryFee ?? 25;
   const coupon = couponCode ? coupons[couponCode] : undefined;
   const deliveryFee = coupon?.type === "delivery" ? 0 : baseDelivery;
   const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
   const discount =
     coupon?.type === "percent"
-      ? Math.min(10, Math.round(subtotal * (coupon.value / 100) * 100) / 100)
+      ? Math.min(100, Math.round(subtotal * (coupon.value / 100) * 100) / 100)
       : coupon?.type === "fixed"
         ? Math.min(coupon.value, subtotal)
         : 0;
-  const total = Math.max(0, subtotal + deliveryFee + serviceFee + tip - discount);
-
-  const placeOrder = useCallback<CartState["placeOrder"]>(
-    ({ address, mode }) => {
-      const rest = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
-      const eta = (rest?.etaMinutes[1] ?? 30) * 60_000;
-      const order: Order = {
-        id: `HRT-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
-        restaurantSlug: restaurantSlug ?? "",
-        restaurantName: rest?.name ?? "Restaurant",
-        lines,
-        total,
-        placedAt: Date.now(),
-        etaAt: Date.now() + eta,
-        address,
-        mode,
-        driver: { name: "Nadia K.", vehicle: "Electric scooter • KX21 ORD", rating: 4.9 },
-      };
-      setOrders((prev) => [order, ...prev]);
-      clear();
-      return order;
-    },
-    [restaurantSlug, lines, total, clear],
+  const total = Math.max(
+    0,
+    Math.round((subtotal + deliveryFee + serviceFee + tip - discount) * 100) / 100,
   );
 
-  const getOrder = useCallback((id: string) => orders.find((o) => o.id === id), [orders]);
+  // Active customer orders merged from live Firebase
+  const orders = useMemo<FirebaseOrder[]>(() => {
+    const all = Object.values(firebaseOrders);
+    const placedSet = new Set(placedOrderIds);
+    return all
+      .filter((o) => {
+        if (!o || !o.id) return false;
+        if (user && o.customer_id === user.uid) return true;
+        if (user && o.customer_email && o.customer_email.toLowerCase() === user.email.toLowerCase())
+          return true;
+        if (placedSet.has(o.id)) return true;
+        return false;
+      })
+      .sort((a, b) =>
+        (b.placed_at || b.created_at || "").localeCompare(a.placed_at || a.created_at || ""),
+      );
+  }, [firebaseOrders, user, placedOrderIds]);
+
+  const placeOrder = useCallback<CartState["placeOrder"]>(
+    async ({ address, mode, paymentMethod = "card", specialInstructions }) => {
+      const rest = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
+      const deliveryAddress: DeliveryAddress =
+        typeof address === "string"
+          ? {
+              label: mode === "pickup" ? "Pickup" : "Delivery",
+              street: address,
+              city: "Johannesburg",
+              postal_code: "2000",
+              latitude: -26.2041,
+              longitude: 28.0473,
+              notes: specialInstructions || null,
+            }
+          : address;
+
+      const items = lines.map((l) => ({
+        item_id: l.dishId || l.lineId,
+        name: l.name,
+        quantity: l.qty,
+        unit_price: l.basePrice || l.unitPrice,
+        notes: l.notes || null,
+        variant: l.variant,
+        addons: l.addons,
+      }));
+
+      const finalDeliveryFee = mode === "pickup" ? 0 : deliveryFee;
+
+      const orderId = await placeFirebaseOrder({
+        restaurant: {
+          id: rest?.slug || restaurantSlug || "restaurant-main",
+          name: rest?.name || "Restaurant Kitchen",
+          image: rest?.image || null,
+        },
+        customer: {
+          uid: user?.uid ?? null,
+          name: user?.name || "Customer",
+          phone: user?.phone || "+27 82 555 0100",
+          email: user?.email || "customer@hearth.app",
+        },
+        items,
+        delivery_address: mode === "pickup" ? null : deliveryAddress,
+        special_instructions: specialInstructions || null,
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === "cash" ? "pending" : "paid",
+        coupon_code: couponCode,
+        discount,
+        tip,
+        delivery_fee: finalDeliveryFee,
+      });
+
+      setPlacedOrderIds((prev) => [orderId, ...prev]);
+      clear();
+      return orderId;
+    },
+    [lines, restaurantSlug, user, deliveryFee, discount, tip, couponCode, clear],
+  );
+
+  const getOrder = useCallback(
+    (id: string) => {
+      return firebaseOrders[id] ?? orders.find((o) => o.id === id);
+    },
+    [firebaseOrders, orders],
+  );
 
   const value = useMemo<CartState>(
     () => ({
@@ -335,6 +446,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discount,
       total,
       orders,
+      placedOrderIds,
       placeOrder,
       getOrder,
       syncing,
@@ -357,6 +469,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discount,
       total,
       orders,
+      placedOrderIds,
       placeOrder,
       getOrder,
       syncing,
@@ -375,28 +488,35 @@ export function useCart() {
 
 export const stageOrder: OrderStage[] = [
   "placed",
+  "pending",
   "accepted",
   "preparing",
   "ready",
-  "driver_assigned",
-  "en_route",
+  "assigned",
+  "picked_up",
+  "on_the_way",
   "delivered",
 ];
 
 export const stageCopy: Record<OrderStage, { title: string; detail: string }> = {
   placed: { title: "Order placed", detail: "Sent to the kitchen" },
-  accepted: { title: "Restaurant accepted", detail: "Your order is confirmed" },
-  preparing: { title: "Preparing your food", detail: "Cooking to order" },
-  ready: { title: "Ready for pickup", detail: "Packed and sealed" },
-  driver_assigned: { title: "Driver assigned", detail: "Heading to the restaurant" },
-  en_route: { title: "On the way", detail: "Your driver is en route" },
-  delivered: { title: "Delivered", detail: "Enjoy your meal" },
+  pending: { title: "Order pending", detail: "Awaiting restaurant acceptance" },
+  accepted: { title: "Restaurant accepted", detail: "Kitchen confirmed your order" },
+  preparing: { title: "Preparing food", detail: "Cooking to order" },
+  ready: { title: "Ready for pickup", detail: "Packed, sealed and ready" },
+  assigned: { title: "Driver assigned", detail: "Driver heading to the restaurant" },
+  picked_up: { title: "Driver picked up", detail: "Food collected from kitchen" },
+  on_the_way: { title: "On the way", detail: "Driver is en route to you" },
+  delivered: { title: "Delivered", detail: "Enjoy your meal!" },
+  cancelled: { title: "Order cancelled", detail: "This order was cancelled" },
+  refunded: { title: "Order refunded", detail: "Refund has been processed" },
 };
 
-/** Derives the live stage from elapsed time so tracking feels realtime without a backend. */
-export function currentStage(order: Order, now: number): OrderStage {
-  const span = order.etaAt - order.placedAt;
-  const progress = Math.min(1, (now - order.placedAt) / span);
-  const index = Math.min(stageOrder.length - 1, Math.floor(progress * stageOrder.length));
-  return stageOrder[index] ?? "placed";
+/** Derives stage from order status */
+export function currentStage(order: FirebaseOrder | undefined | null): OrderStage {
+  if (!order) return "placed";
+  const st = (order.status || "pending").toLowerCase() as OrderStage;
+  if (st === "cancelled" || st === "refunded") return st;
+  if (stageOrder.includes(st)) return st;
+  return "pending";
 }

@@ -116,13 +116,27 @@ export function mapDish(raw: FirebaseRecord & { id: string }, restaurantSlug: st
     name,
     description: str(raw, ["description", "desc", "details", "subtitle"]),
     price: discount > 0 && discount < price ? discount : price,
-    image: str(raw, ["image", "imageUrl", "image_url", "photo", "photoUrl", "thumbnail", "picture"]),
+    image: str(raw, [
+      "image",
+      "imageUrl",
+      "image_url",
+      "photo",
+      "photoUrl",
+      "thumbnail",
+      "picture",
+    ]),
     ...(bool(raw, ["popular", "isPopular", "featured", "is_featured", "isFeatured"], false)
       ? { popular: true }
       : {}),
     category: str(raw, ["category", "categoryName", "categoryId", "group", "section"], "Menu"),
-    ...(diet === "veg" || diet === "vegan" || diet === "gf" ? { diet: diet as "veg" | "vegan" | "gf" } : {}),
-    prepMinutes: num(raw, ["prepMinutes", "prep_time_minutes", "preparationTime", "prepTime", "cookTime"], 0),
+    ...(diet === "veg" || diet === "vegan" || diet === "gf"
+      ? { diet: diet as "veg" | "vegan" | "gf" }
+      : {}),
+    prepMinutes: num(
+      raw,
+      ["prepMinutes", "prep_time_minutes", "preparationTime", "prepTime", "cookTime"],
+      0,
+    ),
     calories: num(raw, ["calories", "kcal", "energy"], 0),
     allergens: strList(raw, ["allergens", "allergies"]),
     ingredients: strList(raw, ["ingredients", "components"]),
@@ -143,14 +157,13 @@ function menuFromMenusNode(menuNode: FirebaseValue, slug: string) {
 
   const categories = toList(menuNode["categories"] as FirebaseValue)
     .filter((cat) => bool(cat, ["is_available", "isAvailable", "available"], true))
-    .sort((a, b) => num(a, ["sort_order", "sortOrder"], 0) - num(b, ["sort_order", "sortOrder"], 0));
+    .sort(
+      (a, b) => num(a, ["sort_order", "sortOrder"], 0) - num(b, ["sort_order", "sortOrder"], 0),
+    );
 
   const categoryName = new Map<string, string>();
   categories.forEach((cat) => {
-    categoryName.set(
-      str(cat, ["id"], cat.id),
-      str(cat, ["name", "title", "label"], "Menu"),
-    );
+    categoryName.set(str(cat, ["id"], cat.id), str(cat, ["name", "title", "label"], "Menu"));
   });
 
   const variants = toList(menuNode["variants"] as FirebaseValue);
@@ -173,7 +186,10 @@ function menuFromMenusNode(menuNode: FirebaseValue, slug: string) {
         sizes: variants
           .filter((v) => itemKey(v) === id)
           .filter((v) => bool(v, ["is_available", "isAvailable"], true))
-          .sort((a, b) => num(a, ["sort_order", "sortOrder"], 0) - num(b, ["sort_order", "sortOrder"], 0))
+          .sort(
+            (a, b) =>
+              num(a, ["sort_order", "sortOrder"], 0) - num(b, ["sort_order", "sortOrder"], 0),
+          )
           .map((v, index) => ({
             id: str(v, ["id"], `variant-${index}`),
             label: str(v, ["name", "label"], `Option ${index + 1}`),
@@ -254,7 +270,11 @@ export function mapRestaurant(
   const slug = slugify(str(raw, ["slug", "handle"], "") || name, raw.id);
   const shared = menuFromMenusNode(menuNode, slug);
   const dishes = shared.dishes.length ? shared.dishes : collectDishes(raw, slug, standaloneItems);
-  const etaMin = num(raw, ["etaMin", "minDeliveryTime", "deliveryTimeMin", "prepTime", "prep_time_minutes"], 0);
+  const etaMin = num(
+    raw,
+    ["etaMin", "minDeliveryTime", "deliveryTimeMin", "prepTime", "prep_time_minutes"],
+    0,
+  );
   const etaMaxRaw = num(raw, ["etaMax", "maxDeliveryTime", "deliveryTimeMax", "deliveryTime"], 0);
   const priceBandRaw = str(raw, ["priceBand", "priceRange", "priceLevel"], "££");
   const categoriesFromDishes = shared.categories.length
@@ -271,9 +291,15 @@ export function mapRestaurant(
     name,
     tagline: str(raw, ["tagline", "description", "about", "summary", "bio"]),
     cuisines: strList(raw, ["cuisines", "cuisine", "tags", "categoriesLabels"]),
-    priceBand: (["£", "££", "£££"].includes(priceBandRaw) ? priceBandRaw : "££") as Restaurant["priceBand"],
+    priceBand: (["£", "££", "£££"].includes(priceBandRaw)
+      ? priceBandRaw
+      : "££") as Restaurant["priceBand"],
     rating: num(raw, ["rating", "averageRating", "stars", "score"], 0),
-    reviewCount: num(raw, ["reviewCount", "rating_count", "reviews", "totalReviews", "ratingCount"], 0),
+    reviewCount: num(
+      raw,
+      ["reviewCount", "rating_count", "reviews", "totalReviews", "ratingCount"],
+      0,
+    ),
     etaMinutes: [etaMin || Math.max(0, etaMaxRaw - 10), etaMaxRaw || etaMin + 15],
     deliveryFee: num(raw, ["deliveryFee", "delivery_fee", "deliveryCharge", "shippingFee"], 0),
     minOrder: num(raw, ["minOrder", "minimumOrder", "min_order", "minOrderValue"], 0),
@@ -289,17 +315,21 @@ export function mapRestaurant(
       "logo",
       "logoUrl",
     ]),
-    ...(str(raw, ["badge", "label", "promoLabel"]) ? { badge: str(raw, ["badge", "label", "promoLabel"]) } : {}),
+    ...(str(raw, ["badge", "label", "promoLabel"])
+      ? { badge: str(raw, ["badge", "label", "promoLabel"]) }
+      : {}),
     openNow: bool(raw, ["openNow", "isOpen", "open"], true),
-    hours: str(raw, ["hours", "openingHours", "opening_hours", "workingHours"]) ||
+    hours:
+      str(raw, ["hours", "openingHours", "opening_hours", "workingHours"]) ||
       (opens && closes ? `${opens}–${closes}` : ""),
     address: str(raw, ["address", "location", "streetAddress", "fullAddress"]),
     phone: str(raw, ["phone", "phoneNumber", "contact", "mobile"]),
-    categories: (explicitCategories.length ? explicitCategories : categoriesFromDishes).filter(Boolean),
+    categories: (explicitCategories.length ? explicitCategories : categoriesFromDishes).filter(
+      Boolean,
+    ),
     dishes,
   };
 }
-
 
 /* --------------------------------- hooks --------------------------------- */
 
@@ -327,7 +357,6 @@ export function useRestaurants() {
       return mapRestaurant(raw, standalone, menuNode ?? null);
     });
   }, [root.data]);
-
 
   return { ...root, restaurants };
 }
@@ -368,7 +397,11 @@ export function usePromotions() {
         detail: str(raw, ["detail", "description", "terms", "subtitle"]),
         code: str(raw, ["code", "couponCode", "promoCode"]),
         type: couponType(raw),
-        value: num(raw, ["value", "amount", "discount", "percent", "percentage", "discountValue"], 0),
+        value: num(
+          raw,
+          ["value", "amount", "discount", "percent", "percentage", "discountValue"],
+          0,
+        ),
       })),
     [root.data],
   );
