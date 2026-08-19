@@ -47,7 +47,10 @@ function OrdersPage() {
           </div>
         ) : (
           orders.map((order) => {
+<<<<<<< HEAD
             if (!order || !order.id) return null;
+=======
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             const status = (order.status || "pending").toLowerCase();
             const isLive =
               status !== "delivered" && status !== "cancelled" && status !== "refunded";
@@ -65,7 +68,11 @@ function OrdersPage() {
                       {order.order_number || order.id}
                     </span>
                     <p className="mt-1 text-base leading-tight font-bold">
+<<<<<<< HEAD
                       {order.restaurant_name || "Restaurant"}
+=======
+                      {order.restaurant_name}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
                     </p>
                   </div>
                   <span

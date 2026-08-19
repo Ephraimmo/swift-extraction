@@ -636,6 +636,7 @@ function Discover() {
       <main className="space-y-6 px-4 pt-4 pb-44 md:pb-24">
         <h1 className="sr-only">Discover food near you</h1>
 
+<<<<<<< HEAD
         {/* Live Loyalty Points Banner (Responsive) */}
         <section className="rounded-3xl bg-primary/10 p-4 sm:p-5 border border-primary/25 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -655,6 +656,48 @@ function Discover() {
                   for discounts
                 </p>
               </div>
+=======
+        <section
+          aria-label="Categories"
+          className="no-scrollbar flex gap-6 overflow-x-auto px-4 py-6 md:flex-wrap md:justify-start md:overflow-visible"
+        >
+          {categories.map((cat, i) => (
+            <Link
+              key={cat.id}
+              to="/search"
+              search={{ q: cat.label }}
+              className="flex flex-shrink-0 flex-col items-center gap-2"
+            >
+              <span
+                className={`grid size-16 place-items-center rounded-3xl text-xs font-bold uppercase ring-1 ${
+                  i === 0
+                    ? "bg-primary/10 text-primary ring-primary/20"
+                    : "bg-secondary text-foreground ring-border"
+                }`}
+              >
+                {cat.short}
+              </span>
+              <span className="text-[11px] font-semibold tracking-tighter uppercase opacity-60">
+                {cat.label}
+              </span>
+            </Link>
+          ))}
+        </section>
+
+        <section
+          aria-label="Todays deals"
+          className="no-scrollbar mb-8 flex gap-3 overflow-x-auto px-4 md:grid md:grid-cols-3 md:overflow-visible"
+        >
+          {promotions.map((deal) => (
+            <div
+              key={deal.id}
+              className="w-64 flex-shrink-0 rounded-3xl md:w-auto bg-secondary p-5 ring-1 ring-border"
+            >
+              <span className="label-mono text-primary">Today's deal</span>
+              <p className="mt-2 text-base leading-tight font-black">{deal.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{deal.detail}</p>
+              <p className="label-mono mt-4 text-muted-foreground">Code {deal.code}</p>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             </div>
 
             <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-primary/15 pt-2.5 sm:border-t-0 sm:pt-0 shrink-0">

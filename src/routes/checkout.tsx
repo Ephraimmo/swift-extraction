@@ -20,11 +20,15 @@ import {
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
+<<<<<<< HEAD
 import { money, type PaymentMethod, type DeliveryAddress } from "@/lib/data";
 import { useLocation } from "@/lib/location";
 import { useRestaurantPaymentConfig } from "@/lib/firebase-adapters";
 import { AuthDialog } from "@/components/app/auth-dialog";
 import { LocationSelectorDialog } from "@/components/app/location-selector-dialog";
+=======
+import { getRestaurant, money, type PaymentMethod, type DeliveryAddress } from "@/lib/data";
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -44,10 +48,48 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+<<<<<<< HEAD
+=======
+const addresses: Array<DeliveryAddress & { id: string }> = [
+  {
+    id: "home",
+    label: "Home",
+    street: "242 High Street",
+    city: "Johannesburg",
+    postal_code: "2000",
+    latitude: -26.2041,
+    longitude: 28.0473,
+    notes: null,
+  },
+  {
+    id: "work",
+    label: "Work",
+    street: "Unit 4, Anchor Works, Harbour Rd",
+    city: "Johannesburg",
+    postal_code: "2001",
+    latitude: -26.1952,
+    longitude: 28.0345,
+    notes: null,
+  },
+];
+
+const payments: Array<{
+  id: PaymentMethod;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: "card", label: "Visa •••• 4242", icon: CreditCard },
+  { id: "apple_pay", label: "Apple Pay", icon: Apple },
+  { id: "wallet", label: "Hearth Wallet — R 180.40", icon: Wallet },
+  { id: "cash", label: "Cash on delivery", icon: Banknote },
+];
+
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 function CheckoutPage() {
   const navigate = useNavigate();
   const {
     lines,
+<<<<<<< HEAD
     restaurant,
     restaurantSlug,
     selectedBranch,
@@ -75,6 +117,24 @@ function CheckoutPage() {
   const [paymentId, setPaymentId] = useState<PaymentMethod>("card");
   const [instructions, setInstructions] = useState("");
   const [kitchenNotes, setKitchenNotes] = useState("");
+=======
+    restaurantSlug,
+    subtotal,
+    deliveryFee,
+    serviceFee,
+    discount,
+    tip,
+    total,
+    placeOrder,
+  } = useCart();
+  const { user } = useAuth();
+  const restaurant = restaurantSlug ? getRestaurant(restaurantSlug) : undefined;
+
+  const [mode, setMode] = useState<"delivery" | "pickup">("delivery");
+  const [addressId, setAddressId] = useState("home");
+  const [paymentId, setPaymentId] = useState<PaymentMethod>("card");
+  const [instructions, setInstructions] = useState("");
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -192,6 +252,7 @@ function CheckoutPage() {
     );
   }
 
+<<<<<<< HEAD
   const isOutOfRange = mode === "delivery" && !quote.isWithinRange;
 
   async function submit() {
@@ -236,11 +297,32 @@ function CheckoutPage() {
           : null;
 
       const isCard = paymentId === "card";
+=======
+  const selectedAddress = addresses.find((a) => a.id === addressId) ?? addresses[0]!;
+
+  async function submit() {
+    if (placing) return;
+    setPlacing(true);
+    try {
+      const deliveryAddress: DeliveryAddress | null =
+        mode === "pickup"
+          ? null
+          : {
+              label: selectedAddress.label,
+              street: selectedAddress.street,
+              city: selectedAddress.city,
+              postal_code: selectedAddress.postal_code,
+              latitude: selectedAddress.latitude,
+              longitude: selectedAddress.longitude,
+              notes: instructions.trim() || null,
+            };
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
       const orderId = await placeOrder({
         address: deliveryAddress ?? (restaurant?.address || "Pickup at restaurant"),
         mode,
         paymentMethod: paymentId,
+<<<<<<< HEAD
         specialInstructions: combinedNotes || undefined,
         paymentProofUrl: finalProofUrl,
         paymentGateway: isCard ? "demo-gateway" : null,
@@ -256,6 +338,16 @@ function CheckoutPage() {
     } catch (error: any) {
       console.error("Order placement failed:", error);
       toast.error(error?.message || "Failed to place order. Please try again.");
+=======
+        specialInstructions: instructions.trim() || undefined,
+      });
+
+      toast.success("Order placed successfully!", { description: `Order ref: ${orderId}` });
+      await navigate({ to: "/orders/$orderId", params: { orderId } });
+    } catch (error) {
+      console.error("Order placement failed:", error);
+      toast.error("Failed to place order. Please try again.");
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
     } finally {
       setPlacing(false);
     }
@@ -289,6 +381,7 @@ function CheckoutPage() {
               </p>
             </>
           ) : (
+<<<<<<< HEAD
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -306,11 +399,69 @@ function CheckoutPage() {
               <p className="text-[11px] text-muted-foreground">
                 Your cart and order details are ready. Sign in or create an account to finalize and earn rewards.
               </p>
+=======
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-mono text-muted-foreground">Guest checkout</span>
+                <Link to="/login" className="text-xs font-bold text-primary hover:underline">
+                  Sign in →
+                </Link>
+              </div>
+              <div className="mt-3 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Your Name (e.g. Alex Mercer)"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="w-full rounded-xl bg-background px-3 py-2 text-sm ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="tel"
+                    placeholder="Phone number"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    className="w-full rounded-xl bg-background px-3 py-2 text-sm ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="w-full rounded-xl bg-background px-3 py-2 text-sm ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+              </div>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
             </div>
           )}
         </section>
 
+<<<<<<< HEAD
         {/* Fulfillment & Destination Summary Card */}
+=======
+        <section>
+          <h2 className="label-mono mb-3 text-muted-foreground">How would you like it?</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {(["delivery", "pickup"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                aria-pressed={mode === m}
+                className={`h-12 rounded-2xl text-sm font-bold capitalize ring-1 ${
+                  mode === m
+                    ? "bg-primary/10 text-primary ring-primary/30"
+                    : "bg-secondary ring-border"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </section>
+
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
         {mode === "delivery" ? (
           <section className="rounded-2xl bg-secondary p-4 ring-1 ring-border space-y-3">
             <div className="flex items-center justify-between">
@@ -363,11 +514,26 @@ function CheckoutPage() {
                 </p>
                 <button
                   type="button"
+<<<<<<< HEAD
                   onClick={() => setOpenLocationDialog(true)}
                   className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
                 >
                   <Plus className="size-3.5" />
                   Add Delivery Address
+=======
+                  onClick={() => setAddressId(a.id)}
+                  aria-pressed={addressId === a.id}
+                  className={`w-full rounded-2xl px-4 py-3 text-left ring-1 ${
+                    addressId === a.id
+                      ? "bg-primary/10 ring-primary/30"
+                      : "bg-secondary ring-border"
+                  }`}
+                >
+                  <span className="label-mono text-muted-foreground">{a.label}</span>
+                  <span className="mt-1 block text-sm font-bold">
+                    {a.street}, {a.city}
+                  </span>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
                 </button>
               </div>
             )}
@@ -407,6 +573,7 @@ function CheckoutPage() {
                 className="w-full resize-none rounded-xl bg-background px-3.5 py-2.5 text-xs ring-1 ring-border outline-none placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30"
               />
             </div>
+<<<<<<< HEAD
           </section>
         ) : (
           <section className="rounded-2xl bg-secondary p-4 ring-1 ring-border space-y-2">
@@ -486,6 +653,55 @@ function CheckoutPage() {
             <span className="font-mono font-bold text-primary">
               +You'll earn ~{pointsEarningsPreview} pts on delivery
             </span>
+=======
+            <label
+              htmlFor="instructions"
+              className="label-mono mt-4 mb-2 block text-muted-foreground"
+            >
+              Delivery instructions
+            </label>
+            <textarea
+              id="instructions"
+              rows={2}
+              maxLength={200}
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="Leave at front gate, gate code #4421."
+              className="w-full resize-none rounded-2xl bg-secondary px-4 py-3 text-sm ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </section>
+        ) : (
+          <section className="rounded-2xl bg-secondary p-4 ring-1 ring-border">
+            <span className="label-mono text-muted-foreground">Collect from</span>
+            <p className="mt-1 text-sm font-bold">
+              {restaurant?.address ?? "242 High Street, Johannesburg"}
+            </p>
+            <p className="label-mono mt-2 text-muted-foreground">
+              {restaurant?.hours ?? "Open today"}
+            </p>
+          </section>
+        )}
+
+        <section>
+          <h2 className="label-mono mb-3 text-muted-foreground">Payment method</h2>
+          <div className="space-y-2">
+            {payments.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setPaymentId(id)}
+                aria-pressed={paymentId === id}
+                className={`flex h-14 w-full items-center gap-3 rounded-2xl px-4 text-sm font-bold ring-1 ${
+                  paymentId === id
+                    ? "bg-primary/10 text-primary ring-primary/30"
+                    : "bg-secondary ring-border"
+                }`}
+              >
+                <Icon className="size-4" aria-hidden />
+                {label}
+              </button>
+            ))}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           </div>
         ) : null}
 
@@ -706,6 +922,7 @@ function CheckoutPage() {
             </div>
           ))}
           <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+<<<<<<< HEAD
             <SummaryRow label="Subtotal" value={money(totals.subtotal)} />
             {comboDiscount > 0 ? (
               <SummaryRow
@@ -747,6 +964,20 @@ function CheckoutPage() {
             ) : null}
             <SummaryRow label="Service fee (5%)" value={money(totals.serviceFee)} />
             {totals.tip > 0 ? <SummaryRow label="Driver tip" value={money(totals.tip)} /> : null}
+=======
+            <SummaryRow label="Subtotal" value={money(subtotal)} />
+            {mode === "delivery" ? (
+              <SummaryRow
+                label="Delivery fee"
+                value={deliveryFee === 0 ? "Free" : money(deliveryFee)}
+              />
+            ) : null}
+            <SummaryRow label="Service fee (5%)" value={money(serviceFee)} />
+            {tip > 0 ? <SummaryRow label="Driver tip" value={money(tip)} /> : null}
+            {discount > 0 ? (
+              <SummaryRow label="Coupon discount" value={`-${money(discount)}`} />
+            ) : null}
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
             <span className="text-sm font-black tracking-widest uppercase">Total</span>
@@ -755,12 +986,18 @@ function CheckoutPage() {
             </span>
           </div>
           <p className="label-mono mt-3 text-muted-foreground">
+<<<<<<< HEAD
             Estimated arrival: ~{deliveryEtaMinutes} minutes
+=======
+            Estimated arrival: {restaurant?.etaMinutes[0] ?? 20}–{restaurant?.etaMinutes[1] ?? 35}{" "}
+            min
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
           </p>
         </section>
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md md:max-w-2xl border-t border-border bg-background/95 px-4 pt-4 pb-7 backdrop-blur">
+<<<<<<< HEAD
         {mode === "delivery" && !activeLocation ? (
           <button
             type="button"
@@ -795,6 +1032,21 @@ function CheckoutPage() {
                 : "Cannot place order"}
           </button>
         )}
+=======
+        <button
+          type="button"
+          onClick={submit}
+          disabled={placing}
+          className="flex h-16 w-full items-center justify-between rounded-3xl bg-primary px-6 text-primary-foreground shadow-2xl shadow-primary/30 transition-transform active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+        >
+          <span className="text-sm font-black tracking-[0.1em] uppercase">
+            {placing ? "Placing order…" : "Place order"}
+          </span>
+          <span className="font-mono font-bold">
+            {money(mode === "pickup" ? total - deliveryFee : total)}
+          </span>
+        </button>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
       </div>
 
       <AuthDialog
