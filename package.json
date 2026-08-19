@@ -2,8 +2,8 @@
   "name": "swift-extraction-workspace",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix swift-extraction run dev",
-    "build": "npm --prefix swift-extraction run build",
-    "lint": "npm --prefix swift-extraction run lint"
+    "dev": "bun --cwd swift-extraction run dev",
+    "build": "bun --cwd swift-extraction install --frozen-lockfile && bun --cwd swift-extraction run build",
+    "lint": "bun --cwd swift-extraction run lint"
   }
 }
