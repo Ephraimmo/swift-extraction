@@ -276,6 +276,7 @@ function AccountPage() {
       </header>
 
       <main className="space-y-8 px-4 pt-6 pb-44 md:pb-24">
+<<<<<<< HEAD
         {/* Rewards & Loyalty Wallet Screen (§8 & §9 of Integration Guide) */}
         <section className="rounded-3xl bg-foreground p-6 text-background shadow-xl space-y-4">
           <div className="flex items-center justify-between">
@@ -287,6 +288,15 @@ function AccountPage() {
               {pointsConfig.discount_percent}% Off per {pointsRequired} pts
             </span>
           </div>
+=======
+        <section className="rounded-3xl bg-foreground p-6 text-background">
+          <span className="label-mono opacity-60">Hearth wallet</span>
+          <p className="mt-1 font-mono text-3xl font-black">R 180.40</p>
+          <p className="mt-2 text-xs opacity-60">
+            Cashback and refund credits apply automatically.
+          </p>
+        </section>
+>>>>>>> 0edc3c76be1d55544b95960373d9126aa3704bcb
 
           <div className="flex items-end justify-between">
             <div>
